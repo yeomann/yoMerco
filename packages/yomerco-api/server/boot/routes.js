@@ -17,18 +17,22 @@ module.exports = (app) => {
   })
 
   app.post('/api/upload', async (req, res, next) => {
-    // Obtengo el file
-    let file
+    // Obtengo los attributos
+    let formData
     try {
-      file = await Util.getFileFromRequest(req)
+      formData = await Util.getFormData(req)
     } catch (error) {
       return next(error.message)
     }
-    if (!file) return new Error('file not found.')
 
-    // convierto el file en un buffer
-    const buffer = fs.readFileSync(file.path)
+    if (!formData.fields['path']) {
+      let error = new Error('path key is missing')
+      return next(error.message)
+    }
 
+    let pathToS3 = formData.fields['path']
+
+    // Get the bucket name
     const parameterName = 'BUCKET_NAME'
     let bucketName
     try {
@@ -37,18 +41,27 @@ module.exports = (app) => {
       return next(error.message)
     }
 
-    let location
-    try {
-      location = await awsInstance.uploadFile(
-        bucketName,
-        buffer,
-        `test/${file.originalFilename}`
-      )
-    } catch (error) {
-      console.log('Hola', error)
-      return next(error.message)
-    }
+    let locations = []
+    for (const key in formData.files) {
+      // convert the file into a buffer
+      const file = formData.files[key]
+      const buffer = fs.readFileSync(file.path)
 
-    res.send(location)
+      // Upload the file
+      let location
+      try {
+        location = await awsInstance.uploadFile(
+          bucketName,
+          buffer,
+          `${pathToS3}/${file.originalFilename}`
+        )
+      } catch (error) {
+        console.log('error', error)
+        return next(error.message)
+      }
+
+      locations.push(location)
+    }
+    return res.status(200).send(locations)
   })
 }

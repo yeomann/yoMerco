@@ -90,17 +90,26 @@ function addDaysFromDate (startDate, numberOfDays) {
  * @param {Request} req
  * @returns {Promise}
  */
-function getFileFromRequest (req) {
+function getFormData (req) {
   return new Promise((resolve, reject) => {
     const form = new multiparty.Form()
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err)
+      let fieldsToReturn = []
+      for (const key in fields) {
+        fieldsToReturn[key] = fields[key][0]
+      }
 
-      if (!validateKeys(['file'], files)) { return reject(new Error('No se encontraron archivos en la peticion.')) }
+      let filesToReturn = []
+      for (const key in files) {
+        filesToReturn[key] = files[key][0]
+      }
 
-      const file = files.file[0] // get the file from the returned files object
-      if (file == null || typeof file === 'undefined') { return reject(new Error('File was not found in form data.')) }
-      return resolve(file)
+      const response = {
+        fields: fieldsToReturn,
+        files: filesToReturn
+      }
+      return resolve(response)
     })
   })
 }
@@ -142,7 +151,7 @@ module.exports = {
   generateRandomString,
   validateValueInKeys,
   addDaysFromDate,
-  getFileFromRequest,
+  getFormData,
   getFormattedDate,
   returnError
 }
