@@ -1,4 +1,4 @@
-const multiparty = require('multiparty')
+const formidable = require('formidable')
 const moment = require('moment-timezone')
 
 /**
@@ -92,17 +92,17 @@ function addDaysFromDate (startDate, numberOfDays) {
  */
 function getFormData (req) {
   return new Promise((resolve, reject) => {
-    const form = new multiparty.Form()
+    const form = new formidable.IncomingForm()
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err)
       let fieldsToReturn = []
       for (const key in fields) {
-        fieldsToReturn[key] = fields[key][0]
+        fieldsToReturn[key] = fields[key]
       }
 
       let filesToReturn = []
       for (const key in files) {
-        filesToReturn[key] = files[key][0]
+        filesToReturn[key] = files[key]
       }
 
       const response = {

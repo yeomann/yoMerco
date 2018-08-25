@@ -12,7 +12,7 @@ module.exports = (app) => {
   )
 
   // Install a "/ping" route that returns "pong"
-  app.get('/api/upload', (req, res) => {
+  app.get('/api/ping', (req, res) => {
     res.send('pong')
   })
 
